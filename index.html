@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Q-Sort Estatística no Direito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --paper:#F1F4F8; --surface:#FFFFFF; --surface-2:#E7EDF3; --raise:0 1px 2px rgba(21,26,33,.07), 0 6px 18px -8px rgba(21,26,33,.14);
+  --ink:#151A21; --ink-2:#4C5867; --ink-3:#78859A;
+  --line:#D4DDE7; --line-2:#B7C3D1;
+  --neg:#A5382B; --neg-soft:#F6E4E1; --neg-line:#DCB4AD;
+  --pos:#1F4E79; --pos-soft:#DFE9F3; --pos-line:#A9C1DA;
+  --neu:#6F7C8E; --neu-soft:#E6EAEF; --neu-line:#C3CBD6;
+  --focus:#2D6FA8;
+  --f-display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-ui:"Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#0E1218; --surface:#161C25; --surface-2:#1E2733; --raise:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -10px rgba(0,0,0,.6);
+    --ink:#E7ECF3; --ink-2:#A7B3C2; --ink-3:#77849A;
+    --line:#28313D; --line-2:#3A4655;
+    --neg:#E08272; --neg-soft:#33211D; --neg-line:#5C3A32;
+    --pos:#84B6E6; --pos-soft:#152738; --pos-line:#2F4C68;
+    --neu:#93A0B1; --neu-soft:#1D242E; --neu-line:#38424F;
+    --focus:#6BA6DC;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#0E1218; --surface:#161C25; --surface-2:#1E2733; --raise:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -10px rgba(0,0,0,.6);
+  --ink:#E7ECF3; --ink-2:#A7B3C2; --ink-3:#77849A;
+  --line:#28313D; --line-2:#3A4655;
+  --neg:#E08272; --neg-soft:#33211D; --neg-line:#5C3A32;
+  --pos:#84B6E6; --pos-soft:#152738; --pos-line:#2F4C68;
+  --neu:#93A0B1; --neu-soft:#1D242E; --neu-line:#38424F;
+  --focus:#6BA6DC;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--f-ui); font-size:16px; line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:920px; margin:0 auto; padding:0 20px 96px}
+h1,h2,h3{font-family:var(--f-display); font-weight:600; text-wrap:balance; margin:0}
+h1{font-size:clamp(26px,4.2vw,38px); line-height:1.15; letter-spacing:-.01em}
+h2{font-size:clamp(20px,3vw,25px); line-height:1.25}
+h3{font-size:17px; line-height:1.3}
+p{margin:0}
+.eyebrow{font-size:11.5px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-family:var(--f-ui)}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+.prose{max-width:60ch; display:flex; flex-direction:column; gap:14px; color:var(--ink-2)}
+.prose strong{color:var(--ink); font-weight:600}
+
+/* topo */
+header.top{padding:26px 0 18px; display:flex; flex-direction:column; gap:6px}
+.rail{display:flex; gap:6px; margin-top:18px}
+.rail .seg{height:4px; flex:1; border-radius:2px; background:var(--line); transition:background .25s}
+.rail .seg.done{background:var(--pos)}
+.rail .seg.now{background:var(--pos); opacity:.55}
+.rail-label{display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--ink-3); font-family:var(--f-mono)}
+
+/* cartoes e superficies */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:var(--raise)}
+.pad{padding:22px}
+@media(min-width:640px){.pad{padding:28px}}
+.stack{display:flex; flex-direction:column; gap:18px}
+.stack-s{display:flex; flex-direction:column; gap:10px}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.spread{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+
+/* botoes */
+button{font:inherit; cursor:pointer; border-radius:8px; border:1px solid transparent; transition:background .15s,border-color .15s,color .15s,transform .06s}
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+button:disabled{opacity:.45; cursor:not-allowed}
+.btn{padding:11px 20px; background:var(--pos); color:var(--surface); font-weight:600; font-size:15px}
+.btn:hover:not(:disabled){filter:brightness(1.08)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-ghost{padding:11px 18px; background:transparent; color:var(--ink-2); border-color:var(--line-2); font-weight:500; font-size:15px}
+.btn-ghost:hover:not(:disabled){background:var(--surface-2); color:var(--ink)}
+.btn-sm{padding:7px 13px; font-size:13.5px}
+
+/* formulario */
+label.field{display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:500; color:var(--ink)}
+select, textarea, input[type=text]{
+  font:inherit; font-size:15px; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line-2); border-radius:8px; padding:10px 12px; width:100%;
+}
+textarea{min-height:88px; resize:vertical; line-height:1.5}
+.grid2{display:grid; grid-template-columns:1fr; gap:14px}
+@media(min-width:620px){.grid2{grid-template-columns:1fr 1fr}}
+.check{display:flex; gap:10px; align-items:flex-start; font-size:14.5px; color:var(--ink-2); line-height:1.45; cursor:pointer}
+.check input{margin-top:3px; width:17px; height:17px; accent-color:var(--pos); flex:none}
+
+/* afirmacao */
+.stmt{font-family:var(--f-display); font-size:clamp(19px,3.2vw,23px); line-height:1.4; color:var(--ink)}
+.qid{font-family:var(--f-mono); font-size:12px; color:var(--ink-3); letter-spacing:.04em}
+.pile-btns{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media(min-width:640px){.pile-btns{grid-template-columns:repeat(4,1fr)}}
+.pile{padding:15px 14px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-weight:600; font-size:15px; text-align:center; line-height:1.3}
+.pile .hint{display:block; font-weight:400; font-size:12.5px; color:var(--ink-3); margin-top:3px}
+.pile.neg:hover{background:var(--neg-soft); border-color:var(--neg-line)}
+.pile.neu:hover{background:var(--neu-soft); border-color:var(--neu-line)}
+.pile.pos:hover{background:var(--pos-soft); border-color:var(--pos-line)}
+.pile.na{color:var(--ink-2)}
+.pile.na:hover{background:var(--surface-2); border-color:var(--line-2)}
+
+/* selecao de coluna */
+.pickgrid{display:flex; flex-direction:column; gap:8px}
+.pick{
+  display:flex; gap:12px; align-items:flex-start; text-align:left; width:100%;
+  padding:12px 14px; background:var(--surface); border:1px solid var(--line); color:var(--ink);
+  font-family:var(--f-display); font-size:16.5px; line-height:1.38;
+}
+.pick:hover{border-color:var(--line-2); background:var(--surface-2)}
+.pick[aria-pressed="true"]{border-color:var(--pos); background:var(--pos-soft); box-shadow:inset 3px 0 0 var(--pos)}
+.tag{flex:none; margin-top:2px; width:9px; height:9px; border-radius:50%}
+.tag.neg{background:var(--neg)} .tag.neu{background:var(--neu)} .tag.pos{background:var(--pos)}
+.tag.na{background:transparent; border:1.5px solid var(--line-2)}
+.counter{font-family:var(--f-mono); font-size:14px; color:var(--ink-2); font-variant-numeric:tabular-nums}
+.sticky-bar{position:sticky; bottom:0; z-index:5; padding:16px 0 4px; margin-top:-6px;
+  background:linear-gradient(to top, var(--surface) 68%, transparent)}
+
+/* grade final */
+.gridscroll{overflow-x:auto; padding-bottom:8px; -webkit-overflow-scrolling:touch}
+.gridcols{display:grid; grid-auto-flow:column; gap:6px; min-width:700px}
+.col{display:flex; flex-direction:column; gap:6px; width:96px}
+.colhead{font-size:10.5px; font-weight:600; text-align:center; padding:6px 5px; border-radius:6px;
+  line-height:1.2; letter-spacing:.01em; min-height:34px; display:flex; align-items:center; justify-content:center}
+.slot{
+  min-height:70px; padding:7px 6px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); font-size:10.5px; line-height:1.3; color:var(--ink-2);
+  text-align:left; font-family:var(--f-ui); cursor:pointer; display:block; width:100%;
+  hyphens:auto; -webkit-hyphens:auto;
+}
+.slot:hover{border-color:var(--line-2)}
+.slot[aria-pressed="true"]{border-color:var(--focus); box-shadow:0 0 0 2px var(--focus) inset}
+.slot .n{display:block; font-family:var(--f-mono); font-size:9.5px; color:var(--ink-3); margin-bottom:2px}
+.legend{display:flex; gap:16px; font-size:12.5px; color:var(--ink-3); flex-wrap:wrap}
+.legend span{display:flex; gap:6px; align-items:center}
+
+/* saida */
+.codebox{
+  font-family:var(--f-mono); font-size:12px; line-height:1.5; color:var(--ink-2);
+  background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+  padding:12px; max-height:180px; overflow:auto; white-space:pre-wrap; word-break:break-all;
+}
+.note{border-left:3px solid var(--line-2); padding-left:14px; color:var(--ink-2); font-size:14.5px}
+.ok{color:var(--pos); font-weight:600}
+.warn{color:var(--neg); font-weight:600}
+.hidden{display:none !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Pesquisa de campo · Ciência de Dados Aplicada ao Direito II · Insper 2026/2</p>
+  <h1>O que você pensa sobre estatística e ciência de dados no Direito</h1>
+  <p class="muted small">Grupo 01 · Metodologia Q · Cerca de 12 minutos</p>
+  <div class="rail" id="rail" aria-hidden="true"></div>
+  <div class="rail-label"><span id="railNow">1. Consentimento</span><span id="railCount">1 / 7</span></div>
+</header>
+
+<main id="app">
+
+<!-- 1. CONSENTIMENTO -->
+<section class="screen card pad stack" id="s-intro">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 1</p>
+    <h2>Antes de começar</h2>
+  </div>
+  <div class="prose">
+    <p>Esta é uma atividade acadêmica da disciplina Ciência de Dados Aplicada ao Direito II, do Insper. Você vai ler 30 frases sobre as disciplinas de estatística e ciência de dados do curso de Direito e organizá-las da que você mais discorda até a que mais concorda.</p>
+    <p><strong>Não existe resposta certa</strong> e a pesquisa não avalia conhecimento. Ela procura identificar quais visões diferentes sobre o tema coexistem no curso. São cerca de 12 minutos, quase tudo em toques na tela.</p>
+    <p>A participação é voluntária e você pode encerrar a qualquer momento, sem qualquer consequência. Nenhum dado que permita identificar você é registrado: não coletamos nome, matrícula, e-mail nem nota. As respostas serão usadas apenas em trabalho acadêmico da disciplina e apresentadas de forma agregada ou anonimizada.</p>
+  </div>
+  <div class="note small">Seu progresso fica salvo apenas neste navegador enquanto você responde. Se fechar a aba por engano, é possível continuar de onde parou no mesmo aparelho.</div>
+  <div class="stack-s">
+    <label class="check"><input type="checkbox" id="cons1"><span>Li as informações acima e concordo em participar.</span></label>
+    <label class="check"><input type="checkbox" id="cons2"><span>Concordo que minhas respostas escritas sejam citadas de forma anônima no relatório. <span class="muted">(opcional)</span></span></label>
+  </div>
+  <div class="row"><button class="btn" id="goPerfil" disabled>Começar</button></div>
+</section>
+
+<!-- 2. PERFIL -->
+<section class="screen card pad stack hidden" id="s-perfil">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 2</p>
+    <h2>Cinco perguntas rápidas</h2>
+    <p class="muted small">Servem apenas para garantir que a pesquisa alcance perfis diferentes de aluno.</p>
+  </div>
+  <div class="grid2">
+    <label class="field">Em que ponto do curso você está?
+      <select id="f_semestre">
+        <option value="">Selecione</option>
+        <option value="1_a_3">1º ao 3º semestre</option>
+        <option value="4_a_5">4º ou 5º semestre</option>
+        <option value="6_ou_mais">6º semestre ou mais</option>
+      </select>
+    </label>
+    <label class="field">Já cursou alguma disciplina quantitativa no curso?
+      <select id="f_cursou">
+        <option value="">Selecione</option>
+        <option value="sim">Sim</option>
+        <option value="nao">Não, estou cursando a primeira</option>
+      </select>
+    </label>
+    <label class="field">Experiência com programação antes da disciplina
+      <select id="f_prog">
+        <option value="">Selecione</option>
+        <option value="nenhuma">Nenhuma</option>
+        <option value="alguma">Alguma, por conta própria ou em curso curto</option>
+        <option value="consistente">Consistente, uso com frequência</option>
+      </select>
+    </label>
+    <label class="field">Como você avalia seu próprio desempenho nessas disciplinas?
+      <select id="f_desemp">
+        <option value="">Selecione</option>
+        <option value="abaixo_da_media">Abaixo da média da turma</option>
+        <option value="na_media">Na média da turma</option>
+        <option value="acima_da_media">Acima da média da turma</option>
+      </select>
+    </label>
+    <label class="field">Área que mais te interessa hoje
+      <select id="f_carreira">
+        <option value="">Selecione</option>
+        <option value="contencioso_dogmatica">Contencioso e áreas dogmáticas</option>
+        <option value="empresarial_transacional">Empresarial e transacional</option>
+        <option value="dados_tecnologia_pesquisa">Dados, tecnologia ou pesquisa</option>
+        <option value="indefinido">Ainda não sei</option>
+      </select>
+    </label>
+  </div>
+  <div class="row"><button class="btn" id="goLeitura" disabled>Continuar</button><span class="counter" id="perfilAviso">Responda as cinco perguntas</span></div>
+</section>
+
+<!-- 3. LEITURA E PRE-CLASSIFICACAO -->
+<section class="screen card pad stack hidden" id="s-leitura">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 3 · Primeira leitura</p>
+    <h2>Uma frase de cada vez</h2>
+    <p class="muted small">Separe cada frase sem pensar muito. É só uma triagem inicial e você reorganiza tudo depois. Use "não se aplica" para frases que não fazem sentido no seu caso.</p>
+  </div>
+  <div class="card pad stack-s" style="box-shadow:none; background:var(--surface-2)">
+    <span class="qid" id="leituraId">Q01</span>
+    <p class="stmt" id="leituraTexto">.</p>
+  </div>
+  <div class="pile-btns">
+    <button class="pile neg" data-pile="neg">Discordo<span class="hint">não é o meu caso</span></button>
+    <button class="pile neu" data-pile="neu">Neutro<span class="hint">indiferente ou depende</span></button>
+    <button class="pile pos" data-pile="pos">Concordo<span class="hint">é o meu caso</span></button>
+    <button class="pile na" data-pile="na">Não se aplica<span class="hint">não vale para mim</span></button>
+  </div>
+  <div class="spread">
+    <button class="btn-ghost btn-sm" id="leituraVoltar">Voltar uma frase</button>
+    <span class="counter" id="leituraProg">1 de 30</span>
+  </div>
+</section>
+
+<!-- 4. ORDENACAO -->
+<section class="screen card pad stack hidden" id="s-ordenacao">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 4 · Ordenação</p>
+    <h2 id="ordTitulo">.</h2>
+    <p class="muted small" id="ordSub">.</p>
+  </div>
+  <div class="spread">
+    <span class="counter" id="ordContador">0 de 2 selecionadas</span>
+    <span class="legend">
+      <span><i class="tag pos"></i>concordo</span>
+      <span><i class="tag neu"></i>neutro</span>
+      <span><i class="tag neg"></i>discordo</span>
+      <span><i class="tag na"></i>não se aplica</span>
+    </span>
+  </div>
+  <div class="pickgrid" id="ordLista"></div>
+  <div class="spread sticky-bar">
+    <button class="btn-ghost btn-sm" id="ordVoltar">Voltar</button>
+    <span class="counter hidden" id="ordContador2"></span>
+    <button class="btn" id="ordConfirmar" disabled>Continuar</button>
+  </div>
+</section>
+
+<!-- 5. REVISAO -->
+<section class="screen card pad stack hidden" id="s-revisao">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 5 · Revisão</p>
+    <h2>Sua grade completa</h2>
+    <p class="muted small">Da esquerda, o que você mais discorda, até a direita, o que mais concorda. Se alguma frase ficou no lugar errado, toque nela e depois em outra para trocar as duas.</p>
+  </div>
+  <div class="gridscroll"><div class="gridcols" id="grade"></div></div>
+  <p class="small muted" id="revAviso">Toque em uma frase para lê-la por inteiro e trocá-la de lugar.</p>
+  <div class="row"><button class="btn" id="goComentarios">Está assim mesmo, continuar</button></div>
+</section>
+
+<!-- 6. COMENTARIOS -->
+<section class="screen card pad stack hidden" id="s-comentarios">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 6 · Quase lá</p>
+    <h2>Quatro perguntas curtas</h2>
+    <p class="muted small">Duas linhas em cada uma já bastam. É esta parte que permite interpretar a sua ordenação.</p>
+  </div>
+  <div class="stack">
+    <label class="field" id="lb_p1">1. Por que você escolheu estas frases como as que mais concorda?
+      <div class="codebox small" id="ext_pos" style="font-family:var(--f-display); font-size:14.5px; white-space:normal; word-break:normal"></div>
+      <textarea id="p1"></textarea>
+    </label>
+    <label class="field" id="lb_p2">2. E por que estas como as que mais discorda?
+      <div class="codebox small" id="ext_neg" style="font-family:var(--f-display); font-size:14.5px; white-space:normal; word-break:normal"></div>
+      <textarea id="p2"></textarea>
+    </label>
+    <label class="field">3. Alguma frase foi difícil de posicionar? Qual e por quê? <span class="muted" style="font-weight:400">(opcional)</span>
+      <textarea id="p3" style="min-height:64px"></textarea>
+    </label>
+    <label class="field">4. Faltou alguma frase que representaria melhor o seu ponto de vista? <span class="muted" style="font-weight:400">(opcional)</span>
+      <textarea id="p4" style="min-height:64px"></textarea>
+    </label>
+  </div>
+  <div class="row"><button class="btn" id="goEnvio">Finalizar</button></div>
+</section>
+
+<!-- 7. ENVIO -->
+<section class="screen card pad stack hidden" id="s-envio">
+  <div class="stack-s">
+    <p class="eyebrow">Etapa 7</p>
+    <h2 id="envioTitulo">Enviar as respostas</h2>
+  </div>
+  <div id="envioAuto" class="stack hidden">
+    <p class="prose" id="envioStatus">Enviando.</p>
+    <div class="row"><button class="btn-ghost btn-sm hidden" id="tentarDeNovo">Tentar enviar de novo</button></div>
+  </div>
+  <div id="envioManual" class="stack hidden">
+    <div class="prose">
+      <p id="avisoManual">Copie o código abaixo e cole no formulário de envio do grupo.</p>
+    </div>
+    <div class="codebox" id="payload"></div>
+    <div class="row">
+      <button class="btn" id="copiar">Copiar código</button>
+      <a class="btn-ghost btn-sm" id="linkForm" href="#" target="_blank" rel="noopener" style="display:none; text-decoration:none; padding:11px 18px; border:1px solid var(--line-2); border-radius:8px; color:var(--ink-2)">Abrir formulário de envio</a>
+      <span class="counter" id="copiaAviso"></span>
+    </div>
+  </div>
+  <div class="note small">Qualquer dúvida sobre a pesquisa pode ser encaminhada ao Grupo 01 da disciplina.</div>
+</section>
+
+</main>
+</div>
+<script>
+/* ============================================================
+   CONFIGURACAO DO GRUPO 01
+   Com formAction e entryId preenchidos, o envio e automatico e o
+   participante nao copia nada. Se o envio falhar, a pagina cai
+   sozinha no modo manual, com o codigo e o link do formulario.
+   ============================================================ */
+const CONFIG = {
+  formAction: "https://docs.google.com/forms/d/e/1FAIpQLScbDDNHztW2D4cYmILw049XekLuNjrpgRGWzIm4MTMmCf_d-g/formResponse",
+  entryId:    "entry.1242493920",
+  formLink:   "https://docs.google.com/forms/d/e/1FAIpQLScbDDNHztW2D4cYmILw049XekLuNjrpgRGWzIm4MTMmCf_d-g/viewform"
+};
+
+const QSAMPLE_VERSAO = "v2-provisoria-2026-09";
+
+/* Distribuicao forcada: 3,4,5,6,5,4,3 de -3 a +3, total 30 */
+const PASSOS = [
+  {pos: 3,  n: 3, lado: "pos"},
+  {pos: -3, n: 3, lado: "neg"},
+  {pos: 2,  n: 4, lado: "pos"},
+  {pos: -2, n: 4, lado: "neg"},
+  {pos: 1,  n: 5, lado: "pos"},
+  {pos: -1, n: 5, lado: "neg"}
+];
+const COLUNAS = [-3,-2,-1,0,1,2,3];
+const ALTURA  = {"-3":3,"-2":4,"-1":5,"0":6,"1":5,"2":4,"3":3};
+
+/* Rotulos verbais. O participante nunca ve o numero da coluna. */
+const ESCALA = {
+  "-3":"Discordo muito", "-2":"Discordo", "-1":"Discordo um pouco",
+  "0":"Neutro ou irrelevante",
+  "1":"Concordo um pouco", "2":"Concordo", "3":"Concordo muito"
+};
+const AFIRMACOES = [
+  {id:"Q01", dim:"UTI", texto:"O que se aprende ali só serve para quem vai trabalhar com pesquisa."},
+  {id:"Q02", dim:"UTI", texto:"A disciplina me ensinou a desconfiar de número apresentado sem contexto."},
+  {id:"Q03", dim:"REL", texto:"Um jurista que não entende de estatística fica dependente de quem entende."},
+  {id:"Q04", dim:"ENT", texto:"Fico animado quando descubro um padrão nos dados."},
+  {id:"Q05", dim:"CAR", texto:"Ter familiaridade com dados vai me diferenciar em processo seletivo."},
+  {id:"Q06", dim:"MET", texto:"As aulas funcionam melhor quando partem de um caso concreto."},
+  {id:"Q07", dim:"DIF", texto:"O ritmo das aulas quantitativas é mais rápido do que eu consigo acompanhar."},
+  {id:"Q08", dim:"ANS", texto:"Comparo meu desempenho com o dos colegas e me sinto atrás."},
+  {id:"Q09", dim:"UTI", texto:"Não consigo imaginar uma situação real em que eu usaria isso."},
+  {id:"Q10", dim:"PRG", texto:"Uso inteligência artificial para escrever o código e me concentro em entender o resultado."},
+  {id:"Q11", dim:"ENT", texto:"Se a disciplina fosse eletiva, eu não teria escolhido."},
+  {id:"Q12", dim:"ENT", texto:"Sinto que essa disciplina não combina com o motivo pelo qual escolhi Direito."},
+  {id:"Q13", dim:"DOG", texto:"Estatística exige um raciocínio diferente do jurídico, e isso é bom para mim."},
+  {id:"Q14", dim:"REL", texto:"O tempo gasto com ciência de dados poderia ser melhor usado em disciplinas jurídicas."},
+  {id:"Q15", dim:"DIF", texto:"A parte difícil não é a matemática, é entender o que a pergunta está pedindo."},
+  {id:"Q16", dim:"PRG", texto:"Não vejo por que um estudante de Direito precisa programar."},
+  {id:"Q17", dim:"CAR", texto:"Vou trabalhar em uma área do Direito em que dados não fazem diferença."},
+  {id:"Q18", dim:"DIF", texto:"Minha base de matemática do ensino médio é suficiente para essa disciplina."},
+  {id:"Q19", dim:"ANS", texto:"Tenho receio de perguntar em aula e parecer que não entendi o básico."},
+  {id:"Q20", dim:"PRG", texto:"Gosto da sensação de fazer o código funcionar."},
+  {id:"Q21", dim:"AVA", texto:"O sistema de avaliação me obriga a estudar de forma constante, e isso ajuda."},
+  {id:"Q22", dim:"ANS", texto:"Sinto ansiedade antes das provas dessa disciplina."},
+  {id:"Q23", dim:"MET", texto:"O professor consegue mostrar por que o conteúdo importa para o Direito."},
+  {id:"Q24", dim:"DOG", texto:"Nas disciplinas dogmáticas eu sei como estudar, nessa eu não sei."},
+  {id:"Q25", dim:"DOG", texto:"Prefiro discutir um acórdão a analisar uma base de dados."},
+  {id:"Q26", dim:"MET", texto:"O material da disciplina pressupõe que eu já sei coisas que não sei."},
+  {id:"Q27", dim:"AVA", texto:"As provas cobram interpretação e não decoreba, e isso me favorece."},
+  {id:"Q28", dim:"REL", texto:"Estatística deveria ser disciplina obrigatória em qualquer curso de Direito."},
+  {id:"Q29", dim:"CAR", texto:"Penso em seguir uma carreira que combine Direito e tecnologia."},
+  {id:"Q30", dim:"AVA", texto:"Estudo essa disciplina pela nota, não pelo conteúdo."},
+];
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const CHAVE = "qsort_g01_v2";
+let E = {
+  versao: 1, qsample: QSAMPLE_VERSAO,
+  inicio: new Date().toISOString(), fim: null,
+  consentimento: "nao", consentimento_citacao: "nao",
+  perfil: {}, pilhas: {}, posicoes: {}, possort: {},
+  etapa: 1, iLeitura: 0, iPasso: 0
+};
+
+function salvar(){ try{ localStorage.setItem(CHAVE, JSON.stringify(E)); }catch(e){} }
+function carregar(){
+  try{
+    const bruto = localStorage.getItem(CHAVE);
+    if(!bruto) return false;
+    const s = JSON.parse(bruto);
+    if(s && s.versao === 1 && s.qsample === QSAMPLE_VERSAO && !s.fim){ E = s; return true; }
+  }catch(e){}
+  return false;
+}
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const porId = Object.fromEntries(AFIRMACOES.map(a => [a.id, a]));
+
+/* ============================================================
+   NAVEGACAO
+   ============================================================ */
+const TELAS = ["s-intro","s-perfil","s-leitura","s-ordenacao","s-revisao","s-comentarios","s-envio"];
+const NOMES = ["1. Consentimento","2. Perfil","3. Leitura","4. Ordenação","5. Revisão","6. Comentários","7. Envio"];
+
+function montarRail(){
+  const r = $("#rail");
+  r.innerHTML = "";
+  TELAS.forEach(() => { const d = document.createElement("div"); d.className = "seg"; r.appendChild(d); });
+}
+function irPara(n){
+  E.etapa = n; salvar();
+  TELAS.forEach((t,i) => $("#"+t).classList.toggle("hidden", i !== n-1));
+  $$("#rail .seg").forEach((s,i) => {
+    s.classList.toggle("done", i < n-1);
+    s.classList.toggle("now", i === n-1);
+  });
+  $("#railNow").textContent = NOMES[n-1];
+  $("#railCount").textContent = n + " / 7";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ============================================================
+   ETAPA 1, CONSENTIMENTO
+   ============================================================ */
+function checarConsentimento(){ $("#goPerfil").disabled = !$("#cons1").checked; }
+$("#cons1").addEventListener("change", checarConsentimento);
+$("#goPerfil").addEventListener("click", () => {
+  E.consentimento = $("#cons1").checked ? "sim" : "nao";
+  E.consentimento_citacao = $("#cons2").checked ? "sim" : "nao";
+  irPara(2);
+});
+
+/* ============================================================
+   ETAPA 2, PERFIL
+   ============================================================ */
+const CAMPOS = {
+  f_semestre: "semestre_faixa", f_cursou: "ja_cursou_quantitativa",
+  f_prog: "experiencia_programacao", f_desemp: "desempenho_autorrelatado",
+  f_carreira: "interesse_carreira"
+};
+function checarPerfil(){
+  const faltam = Object.keys(CAMPOS).filter(id => !$("#"+id).value);
+  $("#goLeitura").disabled = faltam.length > 0;
+  $("#perfilAviso").textContent = faltam.length ? ("Faltam " + faltam.length + " de 5") : "Tudo respondido";
+}
+Object.keys(CAMPOS).forEach(id => $("#"+id).addEventListener("change", () => {
+  E.perfil[CAMPOS[id]] = $("#"+id).value; salvar(); checarPerfil();
+}));
+$("#goLeitura").addEventListener("click", () => { irPara(3); renderLeitura(); });
+
+/* ============================================================
+   ETAPA 3, PRE-CLASSIFICACAO
+   ============================================================ */
+function renderLeitura(){
+  if(E.iLeitura >= AFIRMACOES.length){ irPara(4); renderPasso(); return; }
+  const a = AFIRMACOES[E.iLeitura];
+  $("#leituraId").textContent = a.id;
+  $("#leituraTexto").textContent = a.texto;
+  $("#leituraProg").textContent = (E.iLeitura + 1) + " de " + AFIRMACOES.length;
+  $("#leituraVoltar").disabled = E.iLeitura === 0;
+  $$(".pile").forEach(b => b.setAttribute("aria-pressed", String(E.pilhas[a.id] === b.dataset.pile)));
+}
+$$(".pile").forEach(b => b.addEventListener("click", () => {
+  E.pilhas[AFIRMACOES[E.iLeitura].id] = b.dataset.pile;
+  E.iLeitura++; salvar(); renderLeitura();
+}));
+$("#leituraVoltar").addEventListener("click", () => {
+  if(E.iLeitura > 0){ E.iLeitura--; salvar(); renderLeitura(); }
+});
+
+/* ============================================================
+   ETAPA 4, ORDENACAO POR COLUNA
+   ============================================================ */
+const ROTULOS = {
+  "3":  ["Escolha as 3 frases com que você mais concorda", "As três que mais combinam com o que você pensa."],
+  "-3": ["Agora as 3 com que você mais discorda", "As três que menos combinam com o que você pensa."],
+  "2":  ["Mais 4 frases com que você concorda", "Concorda, mas com menos força que as três anteriores."],
+  "-2": ["Mais 4 frases com que você discorda", "Discorda, mas com menos força que as três anteriores."],
+  "1":  ["Mais 5 frases com que você concorda um pouco", "Concorda só em parte, ou concorda com ressalva."],
+  "-1": ["Mais 5 frases com que você discorda um pouco", "Discorda só em parte, ou discorda com ressalva."]
+};
+let selecao = [];
+
+function restantes(){ return AFIRMACOES.filter(a => !(a.id in E.posicoes)); }
+
+function renderPasso(){
+  if(E.iPasso >= PASSOS.length){
+    restantes().forEach(a => E.posicoes[a.id] = 0);
+    salvar(); irPara(5); renderGrade(); return;
+  }
+  const p = PASSOS[E.iPasso];
+  selecao = [];
+  const chave = String(p.pos);
+  $("#ordTitulo").textContent = ROTULOS[chave][0];
+  $("#ordSub").textContent = ROTULOS[chave][1] + " Restam " + restantes().length + " frases.";
+  $("#ordVoltar").disabled = E.iPasso === 0;
+
+  const ordem = {pos: {pos:0, neu:1, na:2, neg:3}, neg: {neg:0, neu:1, na:2, pos:3}}[p.lado];
+  const lista = restantes().slice().sort((a,b) => {
+    const da = ordem[E.pilhas[a.id] || "neu"], db = ordem[E.pilhas[b.id] || "neu"];
+    return da !== db ? da - db : a.id.localeCompare(b.id);
+  });
+
+  const box = $("#ordLista"); box.innerHTML = "";
+  lista.forEach(a => {
+    const b = document.createElement("button");
+    b.className = "pick"; b.type = "button"; b.setAttribute("aria-pressed","false"); b.dataset.id = a.id;
+    b.innerHTML = '<i class="tag ' + (E.pilhas[a.id] || "neu") + '"></i><span>' + a.texto + '</span>';
+    b.addEventListener("click", () => alternar(a.id, b, p.n));
+    box.appendChild(b);
+  });
+  atualizarContador(p.n);
+}
+function alternar(id, botao, n){
+  const i = selecao.indexOf(id);
+  if(i >= 0){ selecao.splice(i,1); botao.setAttribute("aria-pressed","false"); }
+  else if(selecao.length < n){ selecao.push(id); botao.setAttribute("aria-pressed","true"); }
+  atualizarContador(n);
+}
+function atualizarContador(n){
+  const txt = selecao.length + " de " + n + " selecionadas";
+  $("#ordContador").textContent = txt;
+  const c2 = $("#ordContador2");
+  c2.textContent = txt; c2.classList.remove("hidden");
+  $("#ordConfirmar").disabled = selecao.length !== n;
+}
+$("#ordConfirmar").addEventListener("click", () => {
+  const p = PASSOS[E.iPasso];
+  selecao.forEach(id => E.posicoes[id] = p.pos);
+  E.iPasso++; salvar(); renderPasso();
+});
+$("#ordVoltar").addEventListener("click", () => {
+  if(E.iPasso === 0) return;
+  E.iPasso--;
+  const p = PASSOS[E.iPasso];
+  Object.keys(E.posicoes).forEach(id => { if(E.posicoes[id] === p.pos) delete E.posicoes[id]; });
+  salvar(); renderPasso();
+});
+
+/* ============================================================
+   ETAPA 5, REVISAO DA GRADE
+   ============================================================ */
+let trocaSel = null;
+function renderGrade(){
+  const g = $("#grade"); g.innerHTML = "";
+  COLUNAS.forEach(c => {
+    const col = document.createElement("div"); col.className = "col";
+    const h = document.createElement("div"); h.className = "colhead";
+    h.textContent = ESCALA[String(c)];
+    h.style.background = c < 0 ? "var(--neg-soft)" : (c > 0 ? "var(--pos-soft)" : "var(--neu-soft)");
+    h.style.color = c < 0 ? "var(--neg)" : (c > 0 ? "var(--pos)" : "var(--neu)");
+    col.appendChild(h);
+    AFIRMACOES.filter(a => E.posicoes[a.id] === c).forEach(a => {
+      const s = document.createElement("button");
+      s.className = "slot"; s.type = "button"; s.dataset.id = a.id;
+      s.setAttribute("aria-pressed", String(trocaSel === a.id));
+      s.innerHTML = '<span class="n">' + a.id + '</span>' + a.texto;
+      s.addEventListener("click", () => trocar(a.id));
+      col.appendChild(s);
+    });
+    g.appendChild(col);
+  });
+  $("#revAviso").innerHTML = trocaSel
+    ? ('Selecionada <strong style="color:var(--ink)">' + trocaSel + "</strong>, “" + porId[trocaSel].texto + "” Toque em outra frase para trocar as duas de lugar.")
+    : "Toque em uma frase para lê-la por inteiro e trocá-la de lugar.";
+}
+function trocar(id){
+  if(trocaSel === null){ trocaSel = id; }
+  else if(trocaSel === id){ trocaSel = null; }
+  else {
+    const a = E.posicoes[trocaSel], b = E.posicoes[id];
+    E.posicoes[trocaSel] = b; E.posicoes[id] = a;
+    trocaSel = null; salvar();
+  }
+  renderGrade();
+}
+$("#goComentarios").addEventListener("click", () => {
+  const extremo = (v) => AFIRMACOES.filter(a => E.posicoes[a.id] === v).map(a => "“" + a.texto + "”").join("<br>");
+  $("#ext_pos").innerHTML = extremo(3);
+  $("#ext_neg").innerHTML = extremo(-3);
+  irPara(6);
+});
+
+/* ============================================================
+   ETAPA 6, POS-SORT
+   ============================================================ */
+["p1","p2","p3","p4"].forEach(k => $("#"+k).addEventListener("input", () => {
+  E.possort[k] = $("#"+k).value; salvar();
+}));
+
+/* ============================================================
+   ETAPA 7, ENVIO
+   ============================================================ */
+function montarPayload(){
+  E.fim = new Date().toISOString();
+  return {
+    versao: 1,
+    qsample: QSAMPLE_VERSAO,
+    inicio: E.inicio,
+    fim: E.fim,
+    duracao_min: Math.round((new Date(E.fim) - new Date(E.inicio)) / 60000),
+    consentimento: E.consentimento,
+    consentimento_citacao: E.consentimento_citacao,
+    perfil: E.perfil,
+    pilhas: E.pilhas,
+    posicoes: E.posicoes,
+    possort: {
+      p1_mais_concordo: E.possort.p1 || "",
+      p2_mais_discordo: E.possort.p2 || "",
+      p3_dificil_posicionar: E.possort.p3 || "",
+      p4_frase_faltante: E.possort.p4 || ""
+    }
+  };
+}
+function temAppsScript(){
+  return !!(window.google && window.google.script && window.google.script.run);
+}
+function enviarPorAppsScript(texto){
+  return new Promise((ok, falhou) => {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(falhou).salvarResposta(texto);
+  });
+}
+function enviarPorFormulario(texto){
+  // O Google Forms aceita POST direto no endpoint formResponse. O modo
+  // no-cors impede ler a resposta, mas a gravacao acontece. Se a rede
+  // falhar, o fetch rejeita e caimos no modo manual.
+  const corpo = new URLSearchParams();
+  corpo.append(CONFIG.entryId, texto);
+  corpo.append("fvv", "1");
+  corpo.append("pageHistory", "0");
+  return fetch(CONFIG.formAction, {method:"POST", mode:"no-cors", body:corpo});
+}
+
+let textoEnvio = "";
+function modoManual(mensagem){
+  $("#envioAuto").classList.add("hidden");
+  $("#envioManual").classList.remove("hidden");
+  $("#envioTitulo").textContent = "Falta só um passo";
+  $("#avisoManual").innerHTML = mensagem;
+}
+function envioConcluido(){
+  $("#envioTitulo").textContent = "Respostas enviadas";
+  $("#envioStatus").innerHTML = '<span class="ok">Pronto.</span> Suas respostas foram registradas. Obrigado pela participação, você já pode fechar esta página.';
+  $("#tentarDeNovo").classList.add("hidden");
+  try{ localStorage.removeItem(CHAVE); }catch(e){}
+}
+async function tentarEnviar(){
+  $("#envioAuto").classList.remove("hidden");
+  $("#envioManual").classList.add("hidden");
+  $("#tentarDeNovo").classList.add("hidden");
+  $("#envioTitulo").textContent = "Enviando";
+  $("#envioStatus").textContent = "Registrando as suas respostas, um instante.";
+  try{
+    if(temAppsScript()) await enviarPorAppsScript(textoEnvio);
+    else await enviarPorFormulario(textoEnvio);
+    envioConcluido();
+  }catch(err){
+    modoManual("Não consegui enviar automaticamente, provavelmente por causa da conexão. Copie o código abaixo e cole no formulário do grupo. Leva dez segundos.");
+  }
+}
+
+$("#goEnvio").addEventListener("click", () => {
+  textoEnvio = JSON.stringify(montarPayload());
+  $("#payload").textContent = textoEnvio;
+  if(CONFIG.formLink){
+    const a = $("#linkForm"); a.href = CONFIG.formLink; a.style.display = "inline-block";
+  }
+  irPara(7);
+  const automatico = temAppsScript() || (CONFIG.formAction && CONFIG.entryId);
+  if(automatico) tentarEnviar();
+  else modoManual("Copie o código abaixo e cole no formulário de envio do grupo. Ele contém apenas as suas respostas, sem nenhum dado que identifique você.");
+});
+$("#tentarDeNovo").addEventListener("click", tentarEnviar);
+$("#copiar").addEventListener("click", async () => {
+  const texto = $("#payload").textContent;
+  try{
+    await navigator.clipboard.writeText(texto);
+    $("#copiaAviso").innerHTML = '<span class="ok">Código copiado.</span>';
+  }catch(e){
+    const r = document.createRange(); r.selectNodeContents($("#payload"));
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    $("#copiaAviso").textContent = "Selecione o texto e copie com Ctrl+C ou Cmd+C.";
+  }
+});
+
+/* ============================================================
+   INICIALIZACAO
+   ============================================================ */
+montarRail();
+const retomado = carregar();
+if(retomado){
+  $("#cons1").checked = E.consentimento === "sim";
+  $("#cons2").checked = E.consentimento_citacao === "sim";
+  Object.keys(CAMPOS).forEach(id => { if(E.perfil[CAMPOS[id]]) $("#"+id).value = E.perfil[CAMPOS[id]]; });
+  ["p1","p2","p3","p4"].forEach(k => { if(E.possort[k]) $("#"+k).value = E.possort[k]; });
+  checarConsentimento(); checarPerfil();
+  const n = E.etapa || 1;
+  irPara(n);
+  if(n === 3) renderLeitura();
+  if(n === 4) renderPasso();
+  if(n === 5) renderGrade();
+} else {
+  checarConsentimento(); checarPerfil(); irPara(1);
+}
+</script>
+</body>
+</html>
