@@ -736,14 +736,8 @@ $("#goEnvio").addEventListener("click", () => {
 });
 $("#tentarDeNovo").addEventListener("click", tentarEnviar);
 async function copiarReserva(){
-  try{
-    await navigator.clipboard.writeText(textoEnvio);
-    $("#avisoReserva").innerHTML = '<span class="ok">Código copiado.</span>';
-  }catch(e){
-    const r = document.createRange(); r.selectNodeContents($("#payloadReserva"));
-    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-    $("#avisoReserva").textContent = "Selecione o texto e copie.";
-  }
+  try{ await navigator.clipboard.writeText(textoEnvio); $("#avisoReserva").innerHTML = '<span class="ok">Código copiado.</span>'; }
+  catch(e){ const r = document.createRange(); r.selectNodeContents($("#payloadReserva")); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); $("#avisoReserva").textContent = "Selecione o texto e copie."; }
 }
 $("#copiarReserva").addEventListener("click", copiarReserva);
 $("#copiar").addEventListener("click", async () => {
