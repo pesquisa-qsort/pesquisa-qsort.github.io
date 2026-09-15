@@ -338,6 +338,12 @@ textarea{min-height:88px; resize:vertical; line-height:1.5}
   <div id="envioAuto" class="stack hidden">
     <p class="prose" id="envioStatus">Enviando.</p>
     <div class="row"><button class="btn-ghost btn-sm hidden" id="tentarDeNovo">Tentar enviar de novo</button></div>
+    <details id="reserva" class="hidden small muted">
+      <summary style="cursor:pointer">Guardar uma cópia das respostas, por segurança</summary>
+      <p class="small muted" style="margin:10px 0">Se o grupo avisar que sua resposta não chegou, envie este código para eles.</p>
+      <div class="codebox" id="payloadReserva"></div>
+      <div class="row" style="margin-top:10px"><button class="btn-ghost btn-sm" id="copiarReserva">Copiar código</button><span class="counter" id="avisoReserva"></span></div>
+    </details>
   </div>
   <div id="envioManual" class="stack hidden">
     <div class="prose">
@@ -676,10 +682,14 @@ function enviarPorFormulario(texto){
   // O Google Forms aceita POST direto no endpoint formResponse. O modo
   // no-cors impede ler a resposta, mas a gravacao acontece. Se a rede
   // falhar, o fetch rejeita e caimos no modo manual.
+  const fbzx = "-" + Math.floor(Math.random() * 9e18).toString();
   const corpo = new URLSearchParams();
   corpo.append(CONFIG.entryId, texto);
   corpo.append("fvv", "1");
+  corpo.append("partialResponse", JSON.stringify([null, null, fbzx]));
   corpo.append("pageHistory", "0");
+  corpo.append("fbzx", fbzx);
+  corpo.append("submissionTimestamp", "-1");
   return fetch(CONFIG.formAction, {method:"POST", mode:"no-cors", body:corpo});
 }
 
@@ -694,6 +704,7 @@ function envioConcluido(){
   $("#envioTitulo").textContent = "Respostas enviadas";
   $("#envioStatus").innerHTML = '<span class="ok">Pronto.</span> Suas respostas foram registradas. Obrigado pela participação, você já pode fechar esta página.';
   $("#tentarDeNovo").classList.add("hidden");
+  $("#reserva").classList.remove("hidden");
   try{ localStorage.removeItem(CHAVE); }catch(e){}
 }
 async function tentarEnviar(){
@@ -714,6 +725,7 @@ async function tentarEnviar(){
 $("#goEnvio").addEventListener("click", () => {
   textoEnvio = JSON.stringify(montarPayload());
   $("#payload").textContent = textoEnvio;
+  $("#payloadReserva").textContent = textoEnvio;
   if(CONFIG.formLink){
     const a = $("#linkForm"); a.href = CONFIG.formLink; a.style.display = "inline-block";
   }
@@ -723,6 +735,17 @@ $("#goEnvio").addEventListener("click", () => {
   else modoManual("Copie o código abaixo e cole no formulário de envio do grupo. Ele contém apenas as suas respostas, sem nenhum dado que identifique você.");
 });
 $("#tentarDeNovo").addEventListener("click", tentarEnviar);
+async function copiarReserva(){
+  try{
+    await navigator.clipboard.writeText(textoEnvio);
+    $("#avisoReserva").innerHTML = '<span class="ok">Código copiado.</span>';
+  }catch(e){
+    const r = document.createRange(); r.selectNodeContents($("#payloadReserva"));
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    $("#avisoReserva").textContent = "Selecione o texto e copie.";
+  }
+}
+$("#copiarReserva").addEventListener("click", copiarReserva);
 $("#copiar").addEventListener("click", async () => {
   const texto = $("#payload").textContent;
   try{
